@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import AuthForm from './components/AuthForm';
-import PersonaList from './components/PersonaList';
+import PersonList from './components/PersonList';
 
 const API_URL = 'https://personas.ctpoba.edu.ar/api';
 
