@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import AuthForm from './components/AuthForm';
 import PersonList from './components/PersonList';
+import './App.css';
 
 const API_URL = 'https://personas.ctpoba.edu.ar/api';
 
