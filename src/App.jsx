@@ -1,97 +1,209 @@
-import React, { useState, useEffect } from 'react';
+import React, { Component } from 'react';
 import axios from 'axios';
-import AuthForm from './components/AuthForm';
-import PersonList from './components/PersonList';
 import './App.css';
+import Header from './Componentes/Header'; 
+import Login from './Componentes/Login';
+import Registro from './Componentes/Registro.';
+import Gestion from './Componentes/Gestion';
+import Tarjetas from './Componentes/Tarjetas';
 
-const API_URL = 'https://personas.ctpoba.edu.ar/api';
+export default class App extends Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      token: null,
+      logged: false,
+      personas: [],
+      showLogin: true,
+      showRegister: false,
+      
+    };
+  }
 
-const App = () => {
-  const [authData, setAuthData] = useState(null);
-  const [persons, setPersons] = useState([]);
-  const [name, setName] = useState('');
+  registrodeusuario = (datos) => {
+    const url = "https://personas.ctpoba.edu.ar/api/registrar";
+    axios.post(url, datos)
+      .then((resp) => {
+        console.log(resp.data);
+        alert("Se registro correctamente")
+      })
+      .catch((error) => {
+        console.log(error);
 
-  useEffect(() => {
-    const storedAuthData = localStorage.getItem('authData');
-    if (storedAuthData) {
-      const parsedAuthData = JSON.parse(storedAuthData);
-      setAuthData(parsedAuthData);
-      fetchPersons(parsedAuthData.token);
-    }
-  }, []);
-
-  const fetchPersons = async (token) => {
-    try {
-      const response = await axios.get(`${API_URL}/persons`, {
-        headers: { Authorization: `Bearer ${token}` }
       });
-      setPersons(response.data);
-    } catch (error) {
-      console.error('Error fetching persons:', error);
-    }
-  };
+  }
 
-  const handleRegister = async (email, password) => {
-    try {
-      await axios.post(`${API_URL}/register`, { email, password });
-      alert('User registered successfully');
-    } catch (error) {
-      console.error('Registration error:', error);
-    }
-  };
-
-  const handleLogin = async (email, password) => {
-    try {
-      const response = await axios.post(`${API_URL}/login`, { email, password });
-      setAuthData(response.data);
-      localStorage.setItem('authData', JSON.stringify(response.data));
-      fetchPersons(response.data.token);
-    } catch (error) {
-      console.error('Login error:', error);
-    }
-  };
-
-  const handleAddPerson = async (e) => {
-    e.preventDefault();
-    try {
-      const response = await axios.post(`${API_URL}/persons`, { name }, {
-        headers: { Authorization: `Bearer ${authData.token}` }
+  iniciarsesion = (datos) => {
+    const url2 = "https://personas.ctpoba.edu.ar/api/ingresar";
+    axios.post(url2, datos)
+      .then((resp) => {
+        console.log(resp.data);
+        if (resp.data.status === "ok") {
+          this.setState({ token: resp.data.token, logged: true });
+          
+        } else {
+          alert("No se pudo conectar al servidor");
+        }
+      })
+      .catch((error) => {
+        console.log(error);
       });
-      setPersons([...persons, response.data]);
-      setName('');
-    } catch (error) {
-      console.error('Error adding person:', error);
+  }
+
+  consultalistapriv = () => {
+    if (this.state.token !== null) {
+      const config = {
+        headers: {
+          authorization: this.state.token
+        }
+      };
+      const url3 = "https://personas.ctpoba.edu.ar/api/personas";
+      axios.get(url3, config)
+        .then((resp) => {
+          console.log(resp.data);
+        })
+        .catch((error) => {
+          console.log(error);
+        });
+    } else {
+      alert("Inicie sesión");
     }
-  };
+  }
 
-  const handleDeletePerson = async (id) => {
-    try {
-      await axios.delete(`${API_URL}/persons/${id}`, {
-        headers: { Authorization: `Bearer ${authData.token}` }
-      });
-      setPersons(persons.filter(person => person.id !== id));
-    } catch (error) {
-      console.error('Error deleting person:', error);
+  enviarpersona = (datos) => {
+    if (this.state.token !== null) {
+      const config = {
+        headers: {
+          authorization: this.state.token
+        }
+      };
+      const url4 = "https://personas.ctpoba.edu.ar/api/personas";
+      axios.post(url4, datos, config)
+        .then((resp) => {
+          console.log(resp.data);
+        })
+        .catch((error) => {
+          console.log(error);
+        });
+    } else {
+      console.log("error");
     }
+  }
+
+  mostrarpersona = (datos) => {
+    if (this.state.token !== null) {
+      const config = {
+        headers: {
+          authorization: this.state.token
+        },
+        params: {
+          busqueda: datos?.documento
+        }
+      };
+
+      const url5 = "https://personas.ctpoba.edu.ar/api/personas";
+      axios.get(url5, config)
+        .then((resp) => {
+          const COINCIDENCIA = resp.data.personas.find(persona => persona.documento === datos.documento);
+          if (COINCIDENCIA) {
+            this.setState({ personas: [COINCIDENCIA] });
+          } else {
+            this.setState({ personas: resp.data.personas });
+          }
+        })
+        .catch((error) => {
+          console.log(error);
+        });
+    } else {
+      alert("MAL");
+    }
+  }
+
+  borrarpersona = (persona_id) => {
+    if (this.state.token !== null) {
+      const config = {
+        headers: {
+          authorization: this.state.token
+        },
+        params: { persona_id }
+      };
+
+      const url = "https://personas.ctpoba.edu.ar/api/personas";
+      axios.delete(url, config)
+        .then((resp) => {
+          this.mostrarpersona({})
+          console.log("se elimino correctamente");
+          alert("Se elimino correctamente")
+        })
+        .catch((error) => {
+          console.log(error + "no se pudo eliminar");
+        });
+    }
+  }
+
+  actualizarpersona = (datos, persona_id) => {
+    if (this.state.token !== null) {
+      const config = {
+        headers: {
+          authorization: this.state.token
+        },
+        params: { persona_id }
+      };
+      console.log({ config });
+
+      const url = `https://personas.ctpoba.edu.ar/api/personas/`;
+      axios.put(url, datos, config)
+        .then((resp) => {
+          console.log(resp.data);
+          alert("seactualizo correctamente")
+          this.mostrarpersona({})
+        })
+        .catch((error) => {
+          console.log(error);
+        });
+    } else {
+      alert("Inicie sesión");
+    }
+  }
+
+  handleLoginClick = () => {
+    this.setState({ showLogin: true, showRegister: false });
   };
 
-  const handleLogout = () => {
-    setAuthData(null);
-    localStorage.removeItem('authData');
+  handleRegisterClick = () => {
+    this.setState({ showLogin: false, showRegister: true });
   };
 
-  if (!authData) {
+  render() {
     return (
-      <div>
-        <h1>Login</h1>
-        <AuthForm onSubmit={handleLogin} isLogin={true} />
-        <h1>Register</h1>
-        <AuthForm onSubmit={handleRegister} isLogin={false} />
+      <div className='Contenedor'>
+        <Header 
+          onLoginClick={this.handleLoginClick} 
+          onRegisterClick={this.handleRegisterClick} 
+        />
+        {!this.state.logged ? (
+          <>
+            {this.state.showLogin && <Login iniciarsesion={(datos) => this.iniciarsesion(datos)} />}
+            {this.state.showRegister && <Registro registrodeusuario={(datos) => this.registrodeusuario(datos)} />}
+          </>
+        ) : (
+          <div>
+            <Gestion enviarpersona={(datos) => this.enviarpersona(datos)}
+              mostrarpersona={(datos) => this.mostrarpersona(datos)} />
+          </div>
+        )}
+
+        <div className='Tarjetasapp'>
+          {this.state.personas.map((per, index) =>
+            <Tarjetas
+              key={per._id}
+              persona={per}
+              borrarpersona={(persona_id) => this.borrarpersona(persona_id)}
+              actualizarpersona={(datos, persona_id) => this.actualizarpersona(datos, persona_id)} // Pasar la función actualizarpersona como prop
+            />
+          )}
+        </div>
       </div>
     );
   }
-
-
-};
-
-export default App;
+}
