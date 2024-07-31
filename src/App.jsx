@@ -3,7 +3,7 @@ import axios from 'axios';
 import './App.css';
 import Header from './Componentes/Header'; 
 import Login from './Componentes/Login';
-import Registro from './Componentes/Registro.';
+import Registro from './Componentes/Registro';
 import Gestion from './Componentes/Gestion';
 import Tarjetas from './Componentes/Tarjetas';
 
